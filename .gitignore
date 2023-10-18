@@ -1,0 +1,9 @@
+build/
+.cache/
+.vscode/
+depedencies.lock
+sdkconfig 
+sdkconfig.ci 
+sdkconfig.old
+
+

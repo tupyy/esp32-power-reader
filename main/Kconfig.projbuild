@@ -1,0 +1,16 @@
+menu "Example Configuration"
+
+    config BROKER_URL
+        string "Broker URL"
+        default "mqtt://mqtt.eclipseprojects.io"
+        help
+            URL of the broker to connect to
+
+    config GPIO_OUTPUT_0
+        int "GPIO output pin 0"
+        range ENV_GPIO_RANGE_MIN ENV_GPIO_OUT_RANGE_MAX
+        default 20
+        help
+            GPIO pin number to be used as GPIO_OUTPUT_IO_0.
+
+endmenu

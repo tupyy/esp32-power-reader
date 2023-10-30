@@ -11,8 +11,11 @@
 #include "esp_event.h"
 #include "esp_netif.h"
 #include "esp_system.h"
+#include "esp_timer.h"
 #include "esp_wifi.h"
+#include "freertos/projdefs.h"
 #include "nvs_flash.h"
+#include "portmacro.h"
 #include "protocol_examples_common.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -33,6 +36,62 @@
 
 #include "gpio.h"
 #include "mqtt.h"
+#include "sdkconfig.h"
+
+static SemaphoreHandle_t semaphore;
+static int ticks = 0;
+static int64_t timer = 0;
+
+void read_gpio_task(void *arg) {
+  ESP_LOGI("app", "start read gpio task");
+  QueueHandle_t queue = (QueueHandle_t)arg;
+  uint32_t io_num;
+
+  for (;;) {
+    if (xSemaphoreTake(semaphore, (TickType_t)0)) {
+      if (xQueueReceive(queue, &io_num, portMAX_DELAY)) {
+        ticks++;
+        printf("%d\n", ticks);
+      }
+      xSemaphoreGive(semaphore);
+    }
+  }
+}
+
+void publish_task(void *arg) {
+  ESP_LOGI("app", "start publish task");
+  const char *template = "{\"value\":\"%d\",\"period\":\"%lld\"}";
+  char data[strlen(template) + 20];
+
+  for (;;) {
+    if (xSemaphoreTake(semaphore, portMAX_DELAY)) {
+      if (ticks == 0) {
+        xSemaphoreGive(semaphore);
+        continue;
+      }
+
+      int64_t new_time = esp_timer_get_time();
+      if (timer > 0) {
+        sprintf(data, template, ticks, (new_time - timer) / 1000000);
+      } else {
+        sprintf(data, template, ticks, (int64_t)0);
+      }
+
+      ESP_LOGI("data", "written %s to topic\n", data);
+
+      ticks = 0;
+      timer = new_time;
+
+      // release the semaphore
+      xSemaphoreGive(semaphore);
+
+      if (mqtt_publish("topic/qos0", data) != 0) {
+        ESP_LOGE("mqtt", "unable to publish to topic \"topic/qos0\"");
+      }
+    }
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+  }
+}
 
 void app_main(void) {
   ESP_LOGI("app", "[ReadWatt] Startup..");
@@ -58,8 +117,25 @@ void app_main(void) {
    */
   ESP_ERROR_CHECK(example_connect());
 
-  esp_mqtt_client_handle_t client_t = mqtt_app_start();
-  if (client_t == NULL) {
+  semaphore = xSemaphoreCreateBinary();
+  if (semaphore == NULL) {
+    ESP_LOGE("app", "unable to create counter semaphore");
+    return;
+  }
+
+  if (mqtt_connect(CONFIG_BROKER_URL)) {
     ESP_LOGE("app", "cannot connect to nats");
+    return;
+  }
+
+  QueueHandle_t queue = xQueueCreate(10, sizeof(uint32_t));
+  gpio_setup(queue);
+
+  xTaskCreate(read_gpio_task, "read_gpio_task", 2048, (void *)queue, 10, NULL);
+  xTaskCreate(publish_task, "publish_task", 2048, NULL, 10, NULL);
+
+  xSemaphoreGive(semaphore);
+  while (1) {
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }

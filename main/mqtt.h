@@ -24,4 +24,5 @@
 
 #define MQTT_TAG "mqtt"
 
-esp_mqtt_client_handle_t mqtt_app_start(void);
+int mqtt_connect(const char *host);
+int mqtt_publish(const char *topic, const char *data);

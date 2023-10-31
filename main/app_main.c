@@ -8,6 +8,7 @@
 #include "nvs_flash.h"
 #include "portmacro.h"
 #include "protocol_examples_common.h"
+#include <limits.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -41,7 +42,11 @@ void read_gpio_task(void *arg) {
   for (;;) {
     if (xSemaphoreTake(semaphore, (TickType_t)10)) {
       while (xQueueReceive(queue, &io_num, 0)) { // deplee the queue
-        ticks++;
+        if ((ticks + 1) < INT_MAX) {
+          ticks++;
+        } else {
+          ticks = 0;
+        }
       }
       xSemaphoreGive(semaphore);
     }

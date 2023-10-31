@@ -1,12 +1,3 @@
-/* MQTT (over TCP) Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_netif.h"
@@ -48,13 +39,13 @@ void read_gpio_task(void *arg) {
   uint32_t io_num;
 
   for (;;) {
-    if (xSemaphoreTake(semaphore, (TickType_t)0)) {
-      if (xQueueReceive(queue, &io_num, portMAX_DELAY)) {
+    if (xSemaphoreTake(semaphore, (TickType_t)10)) {
+      while (xQueueReceive(queue, &io_num, 0)) { // deplee the queue
         ticks++;
-        printf("%d\n", ticks);
       }
       xSemaphoreGive(semaphore);
     }
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 
@@ -64,7 +55,7 @@ void publish_task(void *arg) {
   char data[strlen(template) + 20];
 
   for (;;) {
-    if (xSemaphoreTake(semaphore, portMAX_DELAY)) {
+    if (xSemaphoreTake(semaphore, (TickType_t)10)) {
       if (ticks == 0) {
         xSemaphoreGive(semaphore);
         continue;
@@ -88,8 +79,11 @@ void publish_task(void *arg) {
       if (mqtt_publish("topic/qos0", data) != 0) {
         ESP_LOGE("mqtt", "unable to publish to topic \"topic/qos0\"");
       }
+      // wait only if we got the semaphore
+      vTaskDelay(5000 / portTICK_PERIOD_MS);
+    } else {
+      ESP_LOGE("mqtt", "cannot get the semaphore");
     }
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
   }
 }
 

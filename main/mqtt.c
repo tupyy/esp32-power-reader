@@ -1,4 +1,5 @@
 #include "mqtt.h"
+#include "esp_system.h"
 #include "mqtt_client.h"
 
 esp_mqtt_client_handle_t client;
@@ -30,7 +31,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
     break;
   case MQTT_EVENT_DISCONNECTED:
     ESP_LOGI(MQTT_TAG, "MQTT_EVENT_DISCONNECTED");
-    break;
+    // restart if we get disconnected from mqtt
+    esp_restart();
   case MQTT_EVENT_PUBLISHED:
     ESP_LOGI(MQTT_TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
     break;
@@ -74,8 +76,8 @@ int mqtt_publish(const char *topic, const char *data) {
   if (client == NULL) {
     return -1;
   }
-    if (topic == NULL || data == NULL) {
-        return -1;
-    }
+  if (topic == NULL || data == NULL) {
+    return -1;
+  }
   return esp_mqtt_client_publish(client, topic, data, 0, 0, 0);
 }

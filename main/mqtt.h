@@ -23,6 +23,12 @@
 #include "mqtt_client.h"
 
 #define MQTT_TAG "mqtt"
+#define DATA_TEMPLATE "{\"value\":\"%d\",\"period\":\"%lld\"}"
 
 int mqtt_connect(const char *host);
 int mqtt_publish(const char *topic, const char *data);
+
+typedef struct {
+  char topic[20];
+  char payload[100];
+} mqtt_message;

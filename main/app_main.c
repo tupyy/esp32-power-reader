@@ -7,7 +7,6 @@
 #include "freertos/projdefs.h"
 #include "nvs_flash.h"
 #include "portmacro.h"
-#include "protocol_examples_common.h"
 #include <limits.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -25,13 +24,12 @@
 #include "lwip/sockets.h"
 
 #include "esp_log.h"
+#include "mqtt.h"
 #include "mqtt_client.h"
+#include "wifi.h"
 
 #include "gpio.h"
-#include "mqtt.h"
 #include "sdkconfig.h"
-
-static QueueHandle_t mqtt_queue;
 
 void read_gpio_task(void *arg) {
   ESP_LOGI("app", "start read gpio task");
@@ -65,7 +63,7 @@ void read_gpio_task(void *arg) {
     ESP_LOGD("app", "payload:%s, topic:%s\n", msg.payload, msg.topic);
 
     // sent to publish
-    if (xQueueSend(mqtt_queue, (void *)&msg, (TickType_t)0)) {
+    if (publish(msg, false)) {
       ticks = 0;
       start_time = now;
       vTaskDelay(5000 / portTICK_PERIOD_MS);
@@ -111,23 +109,17 @@ void app_main(void) {
    * in examples/protocols/README.md for more information about this
    * function.
    */
-  ESP_ERROR_CHECK(example_connect());
-
-  if (mqtt_connect(CONFIG_BROKER_URL)) {
-    ESP_LOGE("app", "cannot connect to nats");
-    return;
-  }
+  ESP_ERROR_CHECK(wifi_connect());
 
   ESP_LOGI("app", "BROKER_URL:%s, DATA_TOPIC:%s\n", CONFIG_BROKER_URL,
            CONFIG_MQTT_DATA_TOPIC);
 
-  QueueHandle_t queue = xQueueCreate(10, sizeof(uint32_t));
-  mqtt_queue = xQueueCreate(10, sizeof(mqtt_message));
+  //  QueueHandle_t queue = xQueueCreate(10, sizeof(uint32_t));
 
-  gpio_setup(queue);
+  /* gpio_setup(queue); */
 
-  xTaskCreate(read_gpio_task, "read_gpio_task", 2048, (void *)queue, 10, NULL);
-  xTaskCreate(publish_task, "publish_task", 2048, NULL, 10, NULL);
+  /* xTaskCreate(read_gpio_task, "read_gpio_task", 2048, (void *)queue, 10,
+   * NULL); */
 
   while (1) {
     vTaskDelay(1000 / portTICK_PERIOD_MS);

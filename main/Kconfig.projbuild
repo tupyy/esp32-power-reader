@@ -80,5 +80,4 @@ menu "App Configuration"
         config WIFI_CONNECT_AP_BY_SECURITY
             bool "Security"
     endchoice
->>>>>>> 79bf93b (fix sending to mqtt)
 endmenu

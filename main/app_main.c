@@ -73,20 +73,6 @@ void read_gpio_task(void *arg) {
   }
 }
 
-void publish_task(void *arg) {
-  ESP_LOGI("app", "start publish task");
-
-  mqtt_message msg;
-  for (;;) {
-    xQueueReceive(mqtt_queue, (void *)&msg, portMAX_DELAY);
-    ESP_LOGD("app", "written %s to topic %s\n", msg.payload, msg.topic);
-
-    if (mqtt_publish(msg.topic, msg.payload) != 0) {
-      ESP_LOGE("app", "unable to publish to topic %s", msg.topic);
-    }
-  }
-}
-
 void app_main(void) {
   ESP_LOGI("app", "[ReadWatt] Startup..");
   ESP_LOGI("app", "[ReadWatt] Free memory: %" PRIu32 " bytes",

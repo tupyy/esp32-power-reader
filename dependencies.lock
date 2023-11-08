@@ -4,12 +4,6 @@ dependencies:
     source:
       type: idf
     version: 5.2.0
-  protocol_examples_common:
-    component_hash: null
-    source:
-      path: /home/cosmin/esp/esp-idf/examples/common_components/protocol_examples_common
-      type: local
-    version: '*'
-manifest_hash: 6cc4a4ccf52f3299a758277fa4b6a9cfed04c076a0389c0b52ba9430211a2978
+manifest_hash: 4bd9cabb9e4ea4c9742d3fdac782a5f66e6b6b748ce0bf390a9183818d1a2291
 target: esp32
 version: 1.0.0

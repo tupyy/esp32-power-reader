@@ -27,6 +27,7 @@
 #include "mqtt.h"
 #include "mqtt_client.h"
 #include "wifi.h"
+#include "sntp.h"
 
 #include "gpio.h"
 #include "sdkconfig.h"
@@ -99,6 +100,8 @@ void app_main(void) {
 
   ESP_LOGI("app", "BROKER_URL:%s, DATA_TOPIC:%s\n", CONFIG_BROKER_URL,
            CONFIG_MQTT_DATA_TOPIC);
+
+  sync_time();
 
   //  QueueHandle_t queue = xQueueCreate(10, sizeof(uint32_t));
 

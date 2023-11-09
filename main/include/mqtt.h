@@ -20,11 +20,11 @@
 #include "mqtt_client.h"
 
 #define MQTT_TAG "mqtt"
-#define DATA_TEMPLATE   \
-    "{"                 \
-    "\"value\":\"%d\","  \
-    "\"period\":\"%lld\"" \
-    "}"
+#define DATA_TEMPLATE                                                          \
+  "{"                                                                          \
+  "\"value\":\"%d\","                                                          \
+  "\"period\":\"%lld\""                                                        \
+  "}"
 
 typedef struct {
   char topic[20];
@@ -32,6 +32,4 @@ typedef struct {
 } mqtt_message;
 
 BaseType_t publish(mqtt_message msg, bool wait);
-int mqtt_connect(const char *host,
-                 void (*event_handler)(void *, esp_event_base_t, int32_t,
-                                       void *));
+int mqtt_start();

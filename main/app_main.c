@@ -103,6 +103,8 @@ void app_main(void) {
 
   sync_time();
 
+    mqtt_start();
+
   //  QueueHandle_t queue = xQueueCreate(10, sizeof(uint32_t));
 
   /* gpio_setup(queue); */
